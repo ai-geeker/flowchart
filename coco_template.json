@@ -1,0 +1,127 @@
+{
+    "info": {
+        "year": 2021,
+        "version": "1.0",
+        "description": "flow chart COCO annotation",
+        "contributor": "Julia",
+        "url": "",
+        "date_created": ""
+    },
+    "licenses": [
+        {
+            "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/",
+            "id": 1,
+            "name": "Attribution-NonCommercial-ShareAlike License"}
+    ],
+    "images": [],
+    "annotations": [],
+    "categories": [
+        {
+            "supercategory": "node",
+            "id": 1,
+            "name": "rect"
+        },
+        {
+            "supercategory": "node",
+            "id": 2,
+            "name": "rcrect"
+        },
+        {
+            "supercategory": "node",
+            "id": 3,
+            "name": "ellipse"
+        },
+        {
+            "supercategory": "node",
+            "id": 4,
+            "name": "circle"
+        },
+        {
+            "supercategory": "node",
+            "id": 5,
+            "name": "triangle"
+        },
+        {
+            "supercategory": "node",
+            "id": 6,
+            "name": "diamond"
+        },
+        {
+            "supercategory": "node",
+            "id": 7,
+            "name": "parallelogram"
+        },
+        {
+            "supercategory": "node",
+            "id": 8,
+            "name": "polygon4"
+        },
+        {
+            "supercategory": "node",
+            "id": 9,
+            "name": "polygonN"
+        },
+        {
+            "supercategory": "node",
+            "id": 10,
+            "name": "star5"
+        },
+        {
+            "supercategory": "node",
+            "id": 11,
+            "name": "cylinder"
+        },
+        {
+            "supercategory": "node",
+            "id": 12,
+            "name": "band"
+        },
+        {
+            "supercategory": "block arrow",
+            "id": 13,
+            "name": "barrow1",
+            "keypoints": ["start", "end"],
+            "skeleton": [[1, 2]]
+        },
+        {
+            "supercategory": "block arrow",
+            "id": 14,
+            "name": "barrow2",
+            "keypoints": ["start", "stop1", "end"],
+            "skeleton": [[1, 2],[2,3]]
+        },
+        {
+            "supercategory": "block arrow",
+            "id": 15,
+            "name": "barrow3",
+            "keypoints": ["start", "stop1", "stop2", "end"],
+            "skeleton": [[1, 2],[2,3],[3,4]]
+        },
+        {
+            "supercategory": "connection",
+            "id": 16,
+            "name": "larrow1",
+            "keypoints": ["start", "end"],
+            "skeleton": [[1, 2]]
+        },
+        {
+            "supercategory": "connection",
+            "id": 17,
+            "name": "larrow2",
+            "keypoints": ["start", "stop1", "end"],
+            "skeleton": [[1, 2],[2,3]]
+        },
+        {
+            "supercategory": "connection",
+            "id": 18,
+            "name": "larrow3",
+            "keypoints": ["start", "stop1", "stop2", "end"],
+            "skeleton": [[1, 2],[2,3],[3,4]]
+        },
+        {
+            "supercategory": "node",
+            "id": 19,
+            "name": "text"
+        }
+    ]
+}

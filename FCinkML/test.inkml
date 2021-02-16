@@ -1,0 +1,55 @@
+<ink xmlns="http://www.w3.org/2003/InkML">
+<traceFormat>
+<channel name="X" type="decimal"/>
+<channel name="Y" type="decimal"/>
+</traceFormat>
+<annotation type="UI">2010_IRCCyN_FC_writer1_4</annotation>
+<annotation type="copyright">LUNAM/IRCCyN</annotation>
+<annotation type="writer">writer1</annotation>
+<annotation type="truth">"4"</annotation>
+<annotationXML type="truth" encoding="Content-FlowchartML">
+	<flowchart xmlns='LUNAM/IRCCyN/FlowchartML'>
+		<node xml:id="connection_1" type="connection"></node>
+		<node xml:id="process_1" type="process"></node>
+		<node xml:id="decision_1" type="decision"></node>
+		<node xml:id="process_2" type="process"></node>
+		<node xml:id="process_3" type="process"></node>
+		<node xml:id="connection_2" type="connection"></node>
+		<arrow xml:id="_1" source="connection_1" target="process_1">
+traceGroup		</arrow>
+		<arrow xml:id="_2" source="process_1" target="decision_1">
+		</arrow>
+		<arrow xml:id="_3" source="decision_1" target="process_2">
+		</arrow>
+		<arrow xml:id="_4" source="process_2" target="process_1">
+		</arrow>
+		<arrow xml:id="_5" source="decision_1" target="process_3">
+		</arrow>
+		<arrow xml:id="_6" source="process_3" target="connection_2">
+		</arrow>
+	</flowchart>
+</annotationXML>
+<trace id="0">
+443.836 809.863, 443.836 809.863, 446.027 803.288, 444.931 803.288, 439.452 807.671, 343.014 907.397, 216.986 1037.81, 215.89 1043.29, 215.89 1044.38, 216.986 1043.29
+</trace>
+<trace id="1">
+673.973 1001.64, 673.973 1001.64, 696.986 1014.79, 701.37 1021.37, 712.329 1038.9, 711.233 1037.81, 640 998.356, 520.548 897.534, 447.123 843.836, 436.164 831.781, 438.356 831.781
+</trace>
+<trace id="2">
+694.794 1033.42, 694.794 1033.42, 705.753 1030.14, 696.986 1041.1, 650.959 1098.08, 620.274 1135.34, 561.096 1201.1, 536.986 1256.99, 538.082 1256.99, 540.274 1255.89
+</trace>
+<trace id="3">
+526.027 1255.89, 526.027 1255.89, 538.082 1274.52, 541.37 1277.81, 540.274 1275.62, 396.712 1182.47, 219.178 1046.58, 189.589 1016.99, 192.877 1015.89, 196.164 1020.27, 198.356 1026.85
+</trace>
+
+<traceGroup xml:id="27">
+	<traceGroup xml:id="32">
+		<annotation type="truth">decision</annotation>
+		<traceView traceDataRef="0"/>
+		<traceView traceDataRef="1"/>
+		<traceView traceDataRef="2"/>
+		<traceView traceDataRef="3"/>
+		<annotationXML href="decision_1"/>
+	</traceGroup>
+</traceGroup>
+</ink>

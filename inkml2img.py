@@ -251,7 +251,7 @@ class InkMLDataSet(coco_dataset.CocoDataset):
 
     def load(self):
         super().load()
-        with open(self.root_dir + "listInkML.txt") as file:
+        with open(self.root_dir + "listInkML_Test.txt") as file:
             for line in file:
                 file_path = self.root_dir + line.strip()
                 inkml_file = InkMLFile()
@@ -273,6 +273,6 @@ if __name__ == "__main__":
     annotation = dataset.get_annotation()
     print("xxxx: ", annotation)
     annotation_str = json.dumps(annotation, indent=2)
-    with open("twitterData.json", "w") as coco_json_file:
+    with open("inkml_val.json", "w") as coco_json_file:
         coco_json_file.write(annotation_str)
     #dataset.save_images("images")

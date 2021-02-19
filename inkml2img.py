@@ -6,6 +6,8 @@ import coco_dataset
 from enum import IntEnum
 import os
 import json
+import sys
+
 class ChartCategory(IntEnum):
     Rect = 1
     RounedRect = 2
@@ -342,10 +344,11 @@ class InkMLDataSet(coco_dataset.CocoDataset):
     def __init__(self, root_dir):
         super().__init__()
         self.root_dir = root_dir
+        self.file_list = "listInkML.txt"
 
     def load(self):
         super().load()
-        with open(self.root_dir + "listInkML.txt") as file:
+        with open(self.root_dir + self.file_list) as file:
             for line in file:
                 file_path = self.root_dir + line.strip()
                 inkml_file = InkMLFile()
@@ -353,23 +356,29 @@ class InkMLDataSet(coco_dataset.CocoDataset):
                 self.add_item(inkml_file)
 
 def processOneFile():
-    import sys
+
     input_inkml = sys.argv[1]
     output_path = sys.argv[2]
     cv2inkml2img(input_inkml, output_path)
 
-def processAllFile():
+
+def processDataset(file_list, json_out_file, save_image = False):
     dataset = InkMLDataSet("FCinkML/")
+    dataset.file_list = file_list
     dataset.load()
 
-    print(len(dataset.items))
     annotation = dataset.get_annotation()
-    print("xxxx: ", annotation)
     annotation_str = json.dumps(annotation, indent=2)
-    with open("inkml_val.json", "w") as coco_json_file:
+
+    with open(json_out_file, "w") as coco_json_file:
         coco_json_file.write(annotation_str)
 
-    dataset.save_images("images")
+    if save_image:
+        dataset.save_images("images")
+
+def processAllFile():
+    processDataset("listInkML_Train.txt", "inkml_val.json")
+    processDataset("listInkML_Test.txt", "inkml_val.json")
 
 
 if __name__ == "__main__":

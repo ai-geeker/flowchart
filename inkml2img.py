@@ -58,8 +58,10 @@ def get_trace(traces_all, id):
     return None
 
 N = 800
-MARGIN = 2
+MARGIN = 10
 K = (N - 2 * MARGIN) / 2000.0
+
+xml = '{http://www.w3.org/XML/1998/namespace}'
 
 def get_traces_data(inkml_file_abs_path, xmlns='{http://www.w3.org/2003/InkML}'):
 
@@ -93,11 +95,10 @@ def get_traces_data(inkml_file_abs_path, xmlns='{http://www.w3.org/2003/InkML}')
             for traceGroup in traceGroupWrapper.findall(doc_namespace + 'traceGroup'):
 
                 label = traceGroup.find(doc_namespace + 'annotation').text
-
+                traceGroupId = traceGroup.get(xml + 'id')
                 'traces of the current traceGroup'
                 traces_curr = []
                 for traceView in traceGroup.findall(doc_namespace + 'traceView'):
-
                     'Id reference to specific trace tag corresponding to currently considered label'
                     traceDataRef = (traceView.get('traceDataRef'))
 
@@ -106,7 +107,7 @@ def get_traces_data(inkml_file_abs_path, xmlns='{http://www.w3.org/2003/InkML}')
                     single_trace = get_trace(traces_all, traceDataRef)['coords']
                     traces_curr.append(single_trace)
 
-                traces_data.append({'label': label, 'trace_group': traces_curr})
+                traces_data.append({'id': traceGroupId,'label': label, 'trace_group': traces_curr})
 
         else:
             'Consider Validation data that has no labels'
@@ -143,13 +144,66 @@ def get_label_color(label):
     elif label == "data":
         return (255, 255, 0)
     elif label == "arrow":
-        return (0, 255, 255)
+        return (255, 0, 0)
     elif label == "terminator":
         return (0, 0, 255)
     else:
         return (0, 0, 0)
 
+def get_arrow_segmatation(id, ls):
+    background_color = (0, 0, 0)
+    img = np.zeros((N, N, 3), dtype=np.uint8)
+    for subls in ls:
+        data = np.array(subls)
+        img = cv2.polylines(img, [convertDataToPloyPts(data)], False, (255, 255, 255), 6)
 
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    contours, hiberachy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    img = cv2.drawContours(img, contours, -1, (0, 0, 255), 1)
+
+
+    return segemation_from_contours(contours)
+
+def segemation_from_contours(contours):
+    if len(contours) == 0 or len(contours[0]) == 0:
+        return [], []
+
+    minX = 1000000
+    minY = 1000000
+    maxX = -1000000
+    maxY = -1000000
+
+    area = 0
+
+    segs = []
+    for contour in contours:
+        seg = []
+        area += cv2.contourArea(contour)
+        for pts in contour:
+            for pt in pts:
+                x = int(pt[0])
+                y = int(pt[1])
+                seg.append(x)
+                seg.append(y)
+
+                minX = min(x, minX)
+                maxX = max(x, maxX)
+                minX = min(y, minY)
+                maxY = max(y, maxY)
+
+        segs.append(seg)
+
+    return area, [int(minX), int(minY), int(maxX - minX), int(maxY - minY)], segs
+
+def convertDataToPloyPts(data):
+    pts = np.array(data, np.int32)
+    pts = pts.reshape((-1,1,2))
+    return pts
+
+ARROW_MARGIN = 5
 def cv2inkml2img(input_path, output_path, color='black'):
     traces = get_traces_data(input_path)
 
@@ -158,25 +212,42 @@ def cv2inkml2img(input_path, output_path, color='black'):
     img = cv2.rectangle(img, (0, 0), (N, N), background_color, thickness=-1)
 
     for elem in traces:
-        print(elem)
+        #print(elem)
         ls = elem['trace_group']
 
         minX, minY, maxX, maxY = get_min_coords(ls)
         bbox = (minX, minY, (maxX - minX), (maxY - minY))
-        print(minX, minY, maxX, maxY)
+        #print(minX, minY, maxX, maxY)
 
         label = elem.get("label")
-        if label != "connection":
-            continue
+        id = elem.get("id")
 
+        if label == 'arrow':
+            get_arrow_segmatation(id, ls)
+
+        segs = []
         for subls in ls:
             data = np.array(subls)
-            pts = np.array(data, np.int32)
-            pts = pts.reshape((-1,1,2))
-            img = cv2.polylines(img, [pts], False, get_label_color(label), thickness=2)
+            if label == 'arrow':
+                seg_bottom = []
+                seg_top = []
+                for pt in data:
+                    seg_bottom.append([pt[0] + ARROW_MARGIN, pt[1] + ARROW_MARGIN])
+                    seg_top.append([pt[0] - ARROW_MARGIN, pt[1] - ARROW_MARGIN])
+                seg = seg_bottom + seg_top[::-1]
+                #img = cv2.polylines(img, [convertDataToPloyPts(seg)], True, (128, 0, 128), thickness=1)
+
+                #img =cv2.putText(img, label + ": " + id, (round(minX), round(minY)), cv2.FONT_HERSHEY_SIMPLEX, 1, get_label_color(label))
+                # get_arrow_segmatation(id, )
+            thickness = 5 if label == 'arrow' else 2
+            if label == 'arrow':
+                img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness)
             #img = cv2.rectangle(img, (round(minX), round(minY)), (round(maxX), round(maxY)), color, thickness)
 
     cv2.imwrite(output_path, img)
+    cv2.imshow("xxxxx", img)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 class InkMLFile(coco_dataset.CocoItem):
     def __init__(self):
@@ -188,13 +259,12 @@ class InkMLFile(coco_dataset.CocoItem):
         title, ext = os.path.splitext(self.basename)
         self.image_filename =  "ink_" + title + ".png"
         self.traces_data = get_traces_data(file_path)
+        self.__parse()
 
-    def get_annotations(self, image_id, id_prefix):
+    def __parse(self):
         traces = self.traces_data
-        id = 0
         annotations = []
         for elem in traces:
-            id += 1
             ls = elem['trace_group']
             minX, minY, maxX, maxY = get_min_coords(ls)
             bbox_x = round(minX)
@@ -204,16 +274,38 @@ class InkMLFile(coco_dataset.CocoItem):
 
             label = elem.get("label")
             if label == None:
-                return None
-            annotations.append({
-            "id": id_prefix + id,
-            "image_id": image_id,
+                continue
+
+            bbox = [bbox_x, bbox_y, bbox_w, bbox_h]
+            area = bbox_w * bbox_h
+            segmentation = [[maxX, minY, maxX, maxY, minX, maxY, minX, minY]]
+
+            if label == 'arrow':
+                area, bbox, segmentation = get_arrow_segmatation(elem['id'], ls)
+
+            elem["__annotation__"] = {
             "category_id": get_categroy_id_from_label(label),
-            "area": bbox_w * bbox_h,
-            "bbox": [bbox_x, bbox_y, bbox_w, bbox_h],
+            "area": area,
+            "bbox": bbox,
             "iscrowd": 0,
-            "segmentation": [[maxX, minY, maxX, maxY, minX, maxY, minX, minY]]
-            })
+            "segmentation": segmentation
+            }
+
+    def get_annotations(self, image_id, id_prefix):
+        traces = self.traces_data
+        id = 0
+        annotations = []
+        for elem in traces:
+            id += 1
+            ls = elem['trace_group']
+            label = elem.get("label")
+            annotation = elem.get("__annotation__")
+            if annotation == None:
+                continue
+
+            annotation["id"] = id_prefix + id
+            annotation["image_id"] = image_id
+            annotations.append(annotation)
         return annotations
 
     def save_image(self, output_path):
@@ -226,6 +318,8 @@ class InkMLFile(coco_dataset.CocoItem):
         for elem in traces:
             ls = elem['trace_group']
             thickness = 1
+
+            # draw traces
             for subls in ls:
                 data = np.array(subls)
                 pts = np.array(data, np.int32)
@@ -251,21 +345,20 @@ class InkMLDataSet(coco_dataset.CocoDataset):
 
     def load(self):
         super().load()
-        with open(self.root_dir + "listInkML_Test.txt") as file:
+        with open(self.root_dir + "listInkML.txt") as file:
             for line in file:
                 file_path = self.root_dir + line.strip()
                 inkml_file = InkMLFile()
                 inkml_file.load(file_path)
                 self.add_item(inkml_file)
 
-if __name__ == "__main__":
+def processOneFile():
     import sys
-    #input_inkml = 'FCinkML/test.inkml' #sys.argv[1]
-    #output_path = 'test.png'#sys.argv[2]
     input_inkml = sys.argv[1]
     output_path = sys.argv[2]
-    #inkml2img(input_inkml, output_path, color='#284054')
     cv2inkml2img(input_inkml, output_path)
+
+def processAllFile():
     dataset = InkMLDataSet("FCinkML/")
     dataset.load()
 
@@ -275,4 +368,17 @@ if __name__ == "__main__":
     annotation_str = json.dumps(annotation, indent=2)
     with open("inkml_val.json", "w") as coco_json_file:
         coco_json_file.write(annotation_str)
+
+    dataset.save_images("images")
+
+
+if __name__ == "__main__":
+    processAllFile()
+
+    #input_inkml = 'FCinkML/test.inkml' #sys.argv[1]
+    #output_path = 'test.png'#sys.argv[2]
+
+    #inkml2img(input_inkml, output_path, color='#284054')
+
+
     #dataset.save_images("images")

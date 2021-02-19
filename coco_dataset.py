@@ -13,7 +13,7 @@ class CocoDataset:
         with open(coco_template_file) as fp:
             self.annotation = json.load(fp)
             self.annotation["info"]["date_created"] = str(datetime.date.today())
-            print(self.annotation)
+
 
     def add_item(self, item):
         self.items.append(item)
@@ -35,7 +35,6 @@ class CocoDataset:
             }
 
             annotations = item.get_annotations(image_id, image_id * 100)
-            print(annotations)
             self.annotation["images"].append(image)
             self.annotation["annotations"] += annotations
         return self.annotation

@@ -229,21 +229,24 @@ def cv2inkml2img(input_path, output_path, color='black'):
         segs = []
         for subls in ls:
             data = np.array(subls)
-            if label == 'arrow':
-                seg_bottom = []
-                seg_top = []
-                for pt in data:
-                    seg_bottom.append([pt[0] + ARROW_MARGIN, pt[1] + ARROW_MARGIN])
-                    seg_top.append([pt[0] - ARROW_MARGIN, pt[1] - ARROW_MARGIN])
-                seg = seg_bottom + seg_top[::-1]
-                #img = cv2.polylines(img, [convertDataToPloyPts(seg)], True, (128, 0, 128), thickness=1)
+            img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness=2)
 
-                #img =cv2.putText(img, label + ": " + id, (round(minX), round(minY)), cv2.FONT_HERSHEY_SIMPLEX, 1, get_label_color(label))
-                # get_arrow_segmatation(id, )
-            thickness = 5 if label == 'arrow' else 2
-            if label == 'arrow':
-                img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness)
-            #img = cv2.rectangle(img, (round(minX), round(minY)), (round(maxX), round(maxY)), color, thickness)
+        if label == 'arrow':
+            area, bbox, segmentation = get_arrow_segmatation(elem['id'], ls)
+            # fontScale
+            fontScale = 1
+
+            # Line thickness of 2 px
+            thickness = 2
+            font = cv2.FONT_HERSHEY_SIMPLEX
+
+            img = cv2.putText(img, elem["id"], (bbox[0], bbox[1]), font,
+                   fontScale, (128, 0, 128), thickness, cv2.LINE_AA)
+
+            print(elem["id"], bbox)
+            print(elem["id"], segmentation)
+            #img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness=2)
+            img = cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2] + bbox[0], bbox[3] + bbox[1]), (128, 0, 128), thickness=2)
 
     cv2.imwrite(output_path, img)
     cv2.imshow("xxxxx", img)
@@ -381,6 +384,7 @@ def processAllFile():
 
 
 if __name__ == "__main__":
+    #processOneFile()
     processAllFile()
     #processDataset("listInkML_Dev.txt", "inkml_dev.json")
 

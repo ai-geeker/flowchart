@@ -193,11 +193,10 @@ def segemation_from_contours(contours):
 
                 minX = min(x, minX)
                 maxX = max(x, maxX)
-                minX = min(y, minY)
+                minY = min(y, minY)
                 maxY = max(y, maxY)
 
         segs.append(seg)
-
     return area, [int(minX), int(minY), int(maxX - minX), int(maxY - minY)], segs
 
 def convertDataToPloyPts(data):
@@ -377,12 +376,13 @@ def processDataset(file_list, json_out_file, save_image = False):
         dataset.save_images("images")
 
 def processAllFile():
-    processDataset("listInkML_Train.txt", "inkml_val.json")
+    processDataset("listInkML_Train.txt", "inkml_train.json")
     processDataset("listInkML_Test.txt", "inkml_val.json")
 
 
 if __name__ == "__main__":
     processAllFile()
+    #processDataset("listInkML_Dev.txt", "inkml_dev.json")
 
     #input_inkml = 'FCinkML/test.inkml' #sys.argv[1]
     #output_path = 'test.png'#sys.argv[2]

@@ -7,6 +7,8 @@ from enum import IntEnum
 import os
 import json
 import sys
+from scipy import stats
+import math
 
 class ChartCategory(IntEnum):
     Rect = 1
@@ -152,6 +154,79 @@ def get_label_color(label):
     else:
         return (0, 0, 0)
 
+def get_trace_bbox_xyxy(subls):
+    minX = 1000000
+    minY = 1000000
+    maxX = -1000000
+    maxY = -1000000
+
+    for pt in subls:
+        x = int(pt[0])
+        y = int(pt[1])
+
+        minX = min(x, minX)
+        maxX = max(x, maxX)
+        minY = min(y, minY)
+        maxY = max(y, maxY)
+    return minX, minY, maxX, maxY
+
+
+arrow_trace_stat = dict()
+'''
+xxxx len 171
+2 1845
+3 539
+4 133
+1 523
+6 9
+5 36
+7 3
+'''
+
+
+keypoint2_stat = dict()
+print(keypoint2_stat)
+
+NOT_LINE = 0
+H_LINE = 1
+V_LINE = 2
+
+def get_np_xy(subls):
+    x = []
+    y = []
+    for pt in subls:
+        x.append(pt[0])
+        y.append(pt[1])
+    return x, y
+
+    #img = cv2.drawContours(img, contours, -1, (128, 128, 128), 1)
+
+def get_arrow_segmatationv2(id, ls):
+    background_color = (0, 0, 0)
+    img = np.zeros((N, N, 3), dtype=np.uint8)
+    for subls in ls:
+        data = np.array(subls)
+        img = cv2.polylines(img, [convertDataToPloyPts(data)], False, (255, 255, 255), 6)
+
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    contours, hiberachy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    epsilon = 0.06 * cv2.arcLength(contours[0], True)
+    approxCurve = cv2.approxPolyDP(contours[0], epsilon, True)
+
+    print("approxCurve: ", approxCurve)
+    #img = cv2.drawContours(img, contours, -1, (255, 255, 0), 1)
+
+    img = cv2.drawContours(img, [approxCurve], 0, (0, 255, 0), 3)
+
+    cv2.imshow("xxx1111", img)
+    cv2.waitKey()
+
+    return segemation_from_contours(contours)
+
 def get_arrow_segmatation(id, ls):
     background_color = (0, 0, 0)
     img = np.zeros((N, N, 3), dtype=np.uint8)
@@ -164,10 +239,65 @@ def get_arrow_segmatation(id, ls):
     ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
 
     contours, hiberachy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    img = cv2.drawContours(img, contours, -1, (0, 0, 255), 1)
-
-
     return segemation_from_contours(contours)
+
+def get_distance_to_bbox(x, y, x1, x2, y1, y2):
+    return min(abs(x - x1), abs(x-x2, abs(y-y1), abs(y-y2))
+
+def get_keypoints(id, ls, bbox):
+    # py
+    for subls in ls:
+        for pt in subls:
+
+
+def get_keypoints_bak(id, ls):
+    background_color = (0, 0, 0)
+    img = np.zeros((N, N, 3), dtype=np.uint8)
+
+    print("########", id, "len: ", len(ls))
+    num_of_traces = len(ls)
+    if num_of_traces == 2:
+        return get_keypoint2(ls)
+
+    arrow_trace_stat[len(ls)] = arrow_trace_stat.get(len(ls), 0) + 1
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 255), (128, 0, 128), (0, 0, 128), (128, 128, 0)]
+    color_index = 0
+    for subls in ls:
+        color = colors[color_index]
+        color_index += 1
+        x1, y1, x2, y2 = get_trace_bbox_xyxy(subls)
+        w = x2 - x1
+        h = y2 - y1
+        #print(x1, x2, y1, y2, w, h, 1.0 * h/w)
+
+        data = np.array(subls)
+
+        count_N = 4
+        #print('-----------------------------')
+        for i in range(len(data)):
+            if i < count_N:
+                continue
+            next_pt = data[i]
+            curr_pt = data[i-count_N]
+            #print(curr_pt, next_pt)
+            #print("K:" , (next_pt[1] - curr_pt[1]) / (next_pt[0] - curr_pt[0]))
+            curr_pt = data[i]
+
+        next_pt = data[len(data) - 1]
+        curr_pt = data[0]
+        #print("Total K:" , (next_pt[1] - curr_pt[1]) / (next_pt[0] - curr_pt[0]))
+        img = cv2.polylines(img, [convertDataToPloyPts(data)], False, (255, 255, 255), 2)
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    #lines = cv2.HoughLinesP(binary, 1, np.pi/180, 1, minLineLength=30, maxLineGap=1)
+    contours, hiberachy = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    #img = cv2.drawContours(img, contours, -1, (128, 128, 128), 1)
+
+    #cv2.imshow(id, img)
+    #cv2.waitKey()
+    return
 
 def segemation_from_contours(contours):
     if len(contours) == 0 or len(contours[0]) == 0:
@@ -223,16 +353,14 @@ def cv2inkml2img(input_path, output_path, color='black'):
         label = elem.get("label")
         id = elem.get("id")
 
-        if label == 'arrow':
-            get_arrow_segmatation(id, ls)
-
         segs = []
         for subls in ls:
             data = np.array(subls)
             img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness=2)
 
         if label == 'arrow':
-            area, bbox, segmentation = get_arrow_segmatation(elem['id'], ls)
+            area, bbox, segmentation = get_arrow_segmatation(id, ls)
+            #cat, keypoints = get_keypoints(id, ls)
             # fontScale
             fontScale = 1
 
@@ -243,8 +371,6 @@ def cv2inkml2img(input_path, output_path, color='black'):
             img = cv2.putText(img, elem["id"], (bbox[0], bbox[1]), font,
                    fontScale, (128, 0, 128), thickness, cv2.LINE_AA)
 
-            print(elem["id"], bbox)
-            print(elem["id"], segmentation)
             #img = cv2.polylines(img, [convertDataToPloyPts(data)], False, get_label_color(label), thickness=2)
             img = cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2] + bbox[0], bbox[3] + bbox[1]), (128, 0, 128), thickness=2)
 
@@ -258,6 +384,7 @@ class InkMLFile(coco_dataset.CocoItem):
         super().__init__()
 
     def load(self, file_path):
+        #print("load : ", file_path)
         self.file_path = file_path
         self.basename = os.path.basename(file_path)
         title, ext = os.path.splitext(self.basename)
@@ -266,6 +393,49 @@ class InkMLFile(coco_dataset.CocoItem):
         self.__parse()
 
     def __parse(self):
+        # frist, parse
+        self.__parse_no_arrow()
+        self.__parse_arrow()
+
+    def __parse_arrow(self):
+        traces = self.traces_data
+        annotations = []
+        for elem in traces:
+            ls = elem['trace_group']
+            minX, minY, maxX, maxY = get_min_coords(ls)
+            bbox_x = round(minX)
+            bbox_y = round(minY)
+            bbox_w = round((maxX - minX))
+            bbox_h = round((maxY - minY))
+
+            label = elem.get("label")
+            if label != "arrow":
+                continue
+
+            bbox = [bbox_x, bbox_y, bbox_w, bbox_h]
+            area = bbox_w * bbox_h
+            segmentation = [[maxX, minY, maxX, maxY, minX, maxY, minX, minY]]
+
+
+            categroy_id = None
+            area, bbox, segmentation = get_arrow_segmatation(elem['id'], ls)
+            categroy_id, keypoints = get_keypoints(elem['id'], ls, self.bboxes_xyxy)
+
+
+            if categroy_id != None:
+                categroy_id = get_categroy_id_from_label(label)
+
+
+            elem["__annotation__"] = {
+            "category_id": categroy_id,
+            "area": area,
+            "bbox": bbox,
+            "iscrowd": 0,
+            "segmentation": segmentation
+            }
+
+    def __parse_no_arrow(self):
+        self.bboxes_xyxy = []
         traces = self.traces_data
         annotations = []
         for elem in traces:
@@ -280,15 +450,17 @@ class InkMLFile(coco_dataset.CocoItem):
             if label == None:
                 continue
 
+            if label == "arrow":
+                continue
+
+            self.bboxes_xyxy.append([minX, minY, maxX, maxY])
             bbox = [bbox_x, bbox_y, bbox_w, bbox_h]
             area = bbox_w * bbox_h
             segmentation = [[maxX, minY, maxX, maxY, minX, maxY, minX, minY]]
-
-            if label == 'arrow':
-                area, bbox, segmentation = get_arrow_segmatation(elem['id'], ls)
+            categroy_id = get_categroy_id_from_label(label)
 
             elem["__annotation__"] = {
-            "category_id": get_categroy_id_from_label(label),
+            "category_id": categroy_id,
             "area": area,
             "bbox": bbox,
             "iscrowd": 0,
@@ -388,6 +560,11 @@ if __name__ == "__main__":
     processAllFile()
     #processDataset("listInkML_Dev.txt", "inkml_dev.json")
 
+    for k, v in arrow_trace_stat.items():
+        print(k, v)
+
+
+    print("keypoint2_stat: ", keypoint2_stat)
     #input_inkml = 'FCinkML/test.inkml' #sys.argv[1]
     #output_path = 'test.png'#sys.argv[2]
 

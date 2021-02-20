@@ -71,14 +71,10 @@ def get_distance_to_bbox(x, y, x1, y1, x2, y2):
 def get_min_distance_pt_to_bbox(traces, bbox, logging = False):
     min_distance = 10000000
     x1, y1, x2, y2 = bbox
-    if logging:
-        print("bbox", bbox)
     ret = None
     for trace in traces:
         for pt in trace:
             dist = get_distance_to_bbox(pt[0], pt[1], x1, y1, x2, y2)
-            if logging:
-                print(pt[0], pt[1], dist, min_distance)
             if dist < min_distance:
                 ret = pt
                 min_distance = dist
@@ -87,25 +83,18 @@ def get_min_distance_pt_to_bbox(traces, bbox, logging = False):
 
 
 def get_keypoints(trace_group, debugging = False):
-    print(trace_group)
     if trace_group.label != "arrow":
         return None, None
 
     if trace_group.source == None or trace_group.target == None:
         return None, None
 
-    logging = False
-    if trace_group.id == "65":
-        logging = True
-
-    if logging:
+    if debugging:
         print("#source: ", trace_group.source)
         print("#target: ", trace_group.target)
 
-    start_pt, dist1 =   get_min_distance_pt_to_bbox(trace_group.traces, trace_group.source.bbox, logging)
-    end_pt, dist2 =     get_min_distance_pt_to_bbox(trace_group.traces, trace_group.target.bbox, logging)
-
-    print(start_pt, dist1, end_pt, dist2)
+    start_pt, dist1 =   get_min_distance_pt_to_bbox(trace_group.traces, trace_group.source.bbox, debugging)
+    end_pt, dist2 =     get_min_distance_pt_to_bbox(trace_group.traces, trace_group.target.bbox, debugging)
 
     if debugging:
         pass
@@ -187,7 +176,7 @@ class InkMLFile(coco_dataset.CocoItem):
             area, bbox, segmentation = get_arrow_segmatation(elem.id, ls)
             categroy_id, keypoints = get_keypoints(elem)
 
-            if categroy_id != None:
+            if categroy_id == None:
                 categroy_id = get_categroy_id_from_label(label)
 
 
@@ -202,6 +191,9 @@ class InkMLFile(coco_dataset.CocoItem):
             if keypoints != None and len(keypoints) > 0 and len(keypoints) % 3 == 0:
                 elem.annotation["keypoints"] = keypoints
                 elem.annotation["num_keypoints"] = len(keypoints) // 3
+            else:
+                elem.annotation["keypoints"] = [0,0,0, 0,0,0]
+                elem.annotation["num_keypoints"] = 0
 
     def __parse_no_arrow(self):
         traces = self.traces_data
@@ -231,7 +223,9 @@ class InkMLFile(coco_dataset.CocoItem):
             "area": area,
             "bbox": bbox,
             "iscrowd": 0,
-            "segmentation": segmentation
+            "segmentation": segmentation,
+            "keypoints": [],
+            "num_keypoints": 0
             }
 
     def get_annotations(self, image_id, id_prefix):
@@ -241,7 +235,7 @@ class InkMLFile(coco_dataset.CocoItem):
         for elem in traces:
             id += 1
             annotation = elem.annotation
-            if annotation == None:
+            if annotation == None or elem.label != "arrow":
                 continue
 
             annotation["id"] = id_prefix + id
@@ -257,6 +251,8 @@ class InkMLFile(coco_dataset.CocoItem):
         img = cv2.rectangle(img, (0, 0), (N, N), background_color, thickness=-1)
 
         for elem in traces:
+            if elem.label != "arrow":
+                continue
             ls = elem.traces
             thickness = 1
 
@@ -304,7 +300,7 @@ class InkMLFile(coco_dataset.CocoItem):
         return img
 
     def save_image(self, output_path):
-        img = slef.pure_image()
+        img = self.pure_image()
         cv2.imwrite(output_path, img)
 
     def image_width(self):

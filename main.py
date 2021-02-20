@@ -30,8 +30,8 @@ def processDataset(file_list, json_out_file, save_image = False):
         dataset.save_images("images")
 
 def processAllFile():
-    processDataset("listInkML_Train.txt", "inkml_train.json")
-    processDataset("listInkML_Test.txt", "inkml_val.json")
+    processDataset("listInkML_Train.txt", "inkml_train.json", True)
+    processDataset("listInkML_Test.txt", "inkml_val.json", True)
 
 if __name__ == "__main__":
     #processOneFile()

@@ -35,6 +35,9 @@ class CocoDataset:
             }
 
             annotations = item.get_annotations(image_id, image_id * 100)
+            for a in annotations:
+                if a.get("category_id") == None:
+                    exit()
             self.annotation["images"].append(image)
             self.annotation["annotations"] += annotations
         return self.annotation

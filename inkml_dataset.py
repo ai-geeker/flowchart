@@ -235,7 +235,7 @@ class InkMLFile(coco_dataset.CocoItem):
         for elem in traces:
             id += 1
             annotation = elem.annotation
-            if annotation == None or elem.label != "arrow":
+            if annotation == None:
                 continue
 
             annotation["id"] = id_prefix + id
@@ -251,8 +251,6 @@ class InkMLFile(coco_dataset.CocoItem):
         img = cv2.rectangle(img, (0, 0), (N, N), background_color, thickness=-1)
 
         for elem in traces:
-            if elem.label != "arrow":
-                continue
             ls = elem.traces
             thickness = 1
 

@@ -224,7 +224,7 @@ class InkMLFile(coco_dataset.CocoItem):
             "bbox": bbox,
             "iscrowd": 0,
             "segmentation": segmentation,
-            "keypoints": [],
+            "keypoints": [0, 0, 0, 0, 0, 0],
             "num_keypoints": 0
             }
 
